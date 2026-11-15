@@ -1,0 +1,28 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check plugin manifest
+        run: python3 -m json.tool .github/plugin/plugin.json > /dev/null
+      - name: Check every skill has name and description
+        run: |
+          for f in skills/*/SKILL.md; do
+            dir=$(basename "$(dirname "$f")")
+            grep -q "^name: $dir$" "$f" || { echo "$f: name must be $dir"; exit 1; }
+            grep -q "^description: ." "$f" || { echo "$f: missing description"; exit 1; }
+          done
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -v

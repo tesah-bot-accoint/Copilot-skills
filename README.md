@@ -1,49 +1,102 @@
-# Copilot-skills
+# Copilot-skills: an ontology plugin for GitHub Copilot
 
-A GitHub Copilot CLI plugin that makes Copilot work from a shared ontology instead of guessing. The ontology follows the Palantir model:
+[![test](https://github.com/tesah-bot-accoint/Copilot-skills/actions/workflows/test.yml/badge.svg)](https://github.com/tesah-bot-accoint/Copilot-skills/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-- **Object Types**: the things in your project, with their **Properties**.
-- **Link Types**: typed relationships between Object Types.
-- **Action Types**: the only sanctioned ways to change Objects, each with parameters, submission criteria and effects.
+**Stop Copilot from guessing what you mean.**
 
-Each project keeps its ontology in an `ONTOLOGY.md` at its root.
+Ask an AI coding agent to "close the stale tickets" and it has to guess: which tickets, what counts as stale, close how? This plugin gives Copilot a small, explicit model of your project (an ontology) and a memory that learns from use, so it maps vague requests onto defined terms, asks one sharp question when it can't, and changes things only through actions you've declared.
+
+It's a neurosymbolic setup in miniature. The language model handles the fuzzy part (understanding what you said); a plain Markdown ontology supplies the symbolic part (what words mean and what's allowed).
+
+## How it works
+
+```mermaid
+flowchart LR
+    R["Your request"] --> T["resolve-terms<br/>map words onto the ontology"]
+    T -- "ambiguous or unknown" --> Q["Ask one question"]
+    Q --> T
+    T -- "clear" --> A["apply-action<br/>preview, then change"]
+    O[("ONTOLOGY.md<br/>fixed: changes only<br/>with your approval")] --> T
+    O --> A
+    M[("MEMORY.md<br/>fluid: Copilot writes,<br/>entries fade unless used")] --> T
+    M -- "consolidate-memory<br/>proven entries" --> O
+```
+
+Two files per project, with different jobs:
+
+- **`ONTOLOGY.md`, the fixed half.** Modeled on the Palantir Ontology: **Object Types** (the things, with their Properties), **Link Types** (typed relationships) and **Action Types** (the only sanctioned ways to change things, each with parameters, preconditions and effects). Synonyms to avoid and settled ambiguities live here too.
+- **`MEMORY.md`, the fluid half.** Corrections, preferences and approaches that worked. Copilot writes it freely. Each entry fades on a forgetting curve unless it keeps being used; the ones that prove themselves are proposed for the ontology.
 
 ## Install
+
+Requires [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/copilot-cli/about-cli-plugins).
 
 ```sh
 copilot plugin install tesah-bot-accoint/Copilot-skills
 ```
 
-Update with `copilot plugin update ontology`, remove with `copilot plugin uninstall ontology`. To try a local checkout without installing, run `copilot --plugin-dir /path/to/Copilot-skills`.
+Update with `copilot plugin update ontology`; remove with `copilot plugin uninstall ontology`. To try a local checkout without installing, run `copilot --plugin-dir path/to/Copilot-skills`.
+
+The helper scripts need Python 3 (standard library only). Without Python, the skills fall back to applying the same rules by hand.
+
+## Quick start
+
+1. In your project, ask Copilot: **"Set up an ontology for this repo."** It reads your code, drafts `ONTOLOGY.md`, and asks you one question at a time where things are unclear. Or start from the [issue-tracker example](./examples/issue-tracker/ONTOLOGY.md).
+2. Ask something vague: **"Close the stale tickets."** Copilot maps "tickets" to Issue, asks what "stale" means if the ontology doesn't say, then runs the Close Issue action with a preview first.
+3. Work as usual. When you correct Copilot, it notes the correction in `MEMORY.md`.
+4. Now and then, ask: **"Consolidate memory."** Faded entries are dropped and proven ones are offered for the ontology.
 
 ## Skills
 
 | Skill | What it does |
 | --- | --- |
 | [resolve-terms](./skills/resolve-terms/SKILL.md) | Maps a request's nouns and verbs onto `ONTOLOGY.md`, and asks one question instead of guessing when a term is ambiguous or unknown. |
-| [apply-action](./skills/apply-action/SKILL.md) | Changes Objects only through a declared Action Type, after binding parameters and checking submission criteria. |
+| [apply-action](./skills/apply-action/SKILL.md) | Changes things only through a declared Action Type, after filling its parameters and checking its preconditions. |
 | [model-ontology](./skills/model-ontology/SKILL.md) | Creates or extends `ONTOLOGY.md` by reading the code and interviewing you one question at a time. |
 | [remember](./skills/remember/SKILL.md) | Records facts, preferences, corrections and working patterns in `MEMORY.md`, and refreshes entries each time they prove useful. |
-| [consolidate-memory](./skills/consolidate-memory/SKILL.md) | Scores memory on a forgetting curve, drops what has faded, merges duplicates, and proposes long-lived entries as `ONTOLOGY.md` additions for you to approve. |
+| [consolidate-memory](./skills/consolidate-memory/SKILL.md) | Scores memory on a forgetting curve, drops what has faded, merges duplicates, and proposes long-lived entries for the ontology. |
 | [vet-skill](./skills/vet-skill/SKILL.md) | Quarantines and scans an outside skill for prompt injection and risky capabilities, and installs it only after you approve. |
 | [tone-mode](./skills/tone-mode/SKILL.md) | Switches between focused, exploratory, careful and default modes that set how terse, curious and cautious Copilot is. |
 
-## Fixed rules and fluid memory
+## The forgetting curve
 
-Each project gets two files with different jobs, an idea adapted from the GENOME.md / MEMORY.md split in Bitterbot:
+Each memory entry records when it was first and last used and how often. Its retention is
 
-- `ONTOLOGY.md` is the fixed half: definitions and the allowed actions. Only you change it, or Copilot with your approval.
-- `MEMORY.md` is the fluid half: what Copilot learned by working with you. Copilot writes it freely.
+```
+R = exp(-days since last use / (7 × uses))
+```
 
-Memory fades unless it is used. Each entry's retention is `exp(-days since last use / (7 × uses))`. Entries below 0.2 are forgotten, pinned entries never are, and entries used 3 or more times over at least 2 days are proposed for the ontology. Run `consolidate-memory` now and then (for example weekly) to apply this. The rule lives in `skills/consolidate-memory/score.py`, so it gives the same answer every time.
+so every use makes it fade more slowly. Entries below R = 0.2 are forgotten, pinned entries never are, and entries used at least 3 times over at least 2 days are proposed for the ontology. The rule lives in [score.py](./skills/consolidate-memory/score.py) so it gives the same answer every time. Try it on the example:
 
-## Files in this repo
+```sh
+python3 skills/consolidate-memory/score.py examples/issue-tracker/MEMORY.md --today 2026-11-15
+```
 
-- `.github/plugin/plugin.json`: the plugin manifest.
-- `skills/`: the skills above. `skills/model-ontology/ONTOLOGY.template.md` and `skills/remember/MEMORY.template.md` are the blank starting files; `score.py` and `scan.py` are the helper scripts (Python 3, standard library only).
-- `ONTOLOGY.md`: this repo's own ontology (empty sections for now).
-- `.github/copilot-instructions.md`: the standing rule for Copilot when it works inside this repo.
+## Safety
 
-## Try it
+- `ONTOLOGY.md` is never changed without your approval, including by consolidation.
+- Changes go through declared actions with a preview; destructive or bulk changes wait for confirmation.
+- Outside skills go through `vet-skill`: quarantine, a scan for instruction overrides, self-spreading text, hidden characters, pipe-to-shell and network calls ([scan.py](./skills/vet-skill/scan.py)), a full read, and your approval. A clean scan narrows the review; it isn't proof of safety.
 
-In a project, ask Copilot to "set up an ontology for this repo" (`model-ontology`). Then ask something vague, such as "close the stale tickets". It should map "tickets" to an Object Type or ask one question naming the candidates, then run the matching Action Type, showing a preview before it changes anything.
+## Repo layout
+
+```
+.github/plugin/plugin.json      plugin manifest
+.github/copilot-instructions.md rules for Copilot when working on this repo
+skills/<name>/SKILL.md          the skills, plus templates and helper scripts
+examples/issue-tracker/         a worked ONTOLOGY.md and MEMORY.md
+ONTOLOGY.md                     this repo's own ontology (the plugin uses its own method)
+tests/                          tests for the helper scripts
+```
+
+Run the tests with `python3 -m unittest discover -s tests`.
+
+## Credits
+
+- The ontology structure (Object, Link and Action Types) follows the concepts of the [Palantir Foundry Ontology](https://www.palantir.com/docs/foundry/ontology/overview/). This project isn't affiliated with Palantir.
+- The fixed-rules versus fluid-memory split, decay-based consolidation and skill quarantine are adapted from ideas shared by the authors of [Bitterbot](https://github.com/Bitterbot-AI/bitterbot-desktop). No code is copied from it.
+
+## License
+
+[MIT](./LICENSE)

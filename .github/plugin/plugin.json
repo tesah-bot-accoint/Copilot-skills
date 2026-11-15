@@ -1,9 +1,19 @@
 {
   "name": "ontology",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Neurosymbolic skills for Copilot: resolve terms against a Palantir-style ONTOLOGY.md, change things only through declared Action Types, keep a decaying MEMORY.md that consolidates into the ontology, vet outside skills, and switch tone modes.",
-  "author": { "name": "tesah-bot-accoint" },
+  "author": {
+    "name": "tesah-bot-accoint"
+  },
   "repository": "https://github.com/tesah-bot-accoint/Copilot-skills",
-  "keywords": ["ontology", "neurosymbolic", "memory", "glossary", "palantir"],
-  "skills": "skills/"
+  "keywords": [
+    "ontology",
+    "neurosymbolic",
+    "memory",
+    "glossary",
+    "palantir"
+  ],
+  "skills": "skills/",
+  "license": "MIT",
+  "homepage": "https://github.com/tesah-bot-accoint/Copilot-skills"
 }
