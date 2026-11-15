@@ -15,6 +15,10 @@ def run(*args):
     return subprocess.run([sys.executable, *map(str, args)], capture_output=True, text=True)
 
 
+# REVIEW R61 [should-fix]: Missing cases: the forget and crystallize boundaries (R exactly 0.2, span
+# exactly 2 days); the today flag with no value (crashes today, R42); first after last; uses of 0;
+# last in the future. For scan.py: steering-file, symlink (R49), binary file, and exit code with only
+# low findings.
 class ScoreTest(unittest.TestCase):
     def test_example_memory(self):
         out = run(SCORE, ROOT / "examples" / "issue-tracker" / "MEMORY.md", "--today", "2026-11-15")
@@ -25,6 +29,8 @@ class ScoreTest(unittest.TestCase):
         self.assertTrue(all(line.startswith("keep") for line in lines[2:]))
 
     def test_pinned_never_fades(self):
+        # REVIEW R62 [nit]: delete=False leaks temp files on every run. Use TemporaryDirectory, as
+        # ScanTest does.
         with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as f:
             f.write("## Facts\n- [first: 2020-01-01 | last: 2020-01-01 | uses: 1 | pinned] keep me\n")
         out = run(SCORE, f.name, "--today", "2026-11-15")

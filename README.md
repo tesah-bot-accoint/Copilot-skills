@@ -11,6 +11,7 @@ It's a neurosymbolic setup in miniature. The language model handles the fuzzy pa
 
 ## How it works
 
+<!-- REVIEW R10 [nit]: The diagram labels ONTOLOGY.md 'fixed: changes only with your approval', but the consolidate-memory arrow into it has no approval step, and the resolve-terms Record path (step 6) isn't drawn. Label the arrow 'proposed, with approval'. -->
 ```mermaid
 flowchart LR
     R["Your request"] --> T["resolve-terms<br/>map words onto the ontology"]
@@ -30,6 +31,7 @@ Two files per project, with different jobs:
 
 ## Install
 
+<!-- REVIEW R11 [clarify]: Check the install form (plugin install owner/repo), the update and uninstall commands, and the plugin-dir flag against the current Copilot CLI plugin docs before announcing this. The CLI's plugin commands are new and have changed. -->
 Requires [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/copilot-cli/about-cli-plugins).
 
 ```sh
@@ -67,6 +69,7 @@ Each memory entry records when it was first and last used and how often. Its ret
 R = exp(-days since last use / (7 × uses))
 ```
 
+<!-- REVIEW R12 [should-fix]: Spell out what this means in practice: an entry used once is forgotten about 11 days after its last use (7 x ln 5), after 2 uses about 23 days, after 3 uses about 34 days. These are calendar days, so a project left alone for a month loses most of its memory (see R33). Also, 'at least 3 times over at least 2 days' doesn't match score.py, which needs last minus first of at least 2, which means 3 distinct calendar days. Pick one and align README, SKILL.md and score.py. -->
 so every use makes it fade more slowly. Entries below R = 0.2 are forgotten, pinned entries never are, and entries used at least 3 times over at least 2 days are proposed for the ontology. The rule lives in [score.py](./skills/consolidate-memory/score.py) so it gives the same answer every time. Try it on the example:
 
 ```sh

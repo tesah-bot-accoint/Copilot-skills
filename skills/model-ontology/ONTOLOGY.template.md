@@ -6,6 +6,7 @@ Keep entries short. Every name here is the one word Copilot uses in replies, cod
 
 ## Object Types
 
+<!-- REVIEW R25 [must-fix]: The example Issue below has `labels (list of Label)` as a Property. That breaks model-ontology's rule that a Property pointing at another Object is a Link Type, and it duplicates the tagged-with link in the next section. Copilot copies templates literally: remove `labels`. -->
 <!-- One section per Object Type. Copy this shape:
 
 ### Issue
@@ -25,11 +26,13 @@ A unit of tracked work in GitHub Issues.
 | fixed-by | Issue | Pull Request | one-to-many |
 -->
 
+<!-- REVIEW R27 [nit]: Only the Link Types section has a live, header-only table. Make the three sections consistent. -->
 | Link | From | To | Cardinality |
 | --- | --- | --- | --- |
 
 ## Action Types
 
+<!-- REVIEW R26 [should-fix]: The Action format is missing: (a) whether each parameter is required, and its default. apply-action says 'don't pick defaults the Action Type doesn't state', but the format has nowhere to state one (the issue-tracker example improvises '(string, optional)'). (b) Who may run the action (R17). (c) A split between Effects (changes to Objects) and Side effects (comments, notifications, webhooks). Side effects are what make an action outward-facing, so they should drive confirmation. -->
 <!-- One section per Action Type. Copilot changes Objects only through these. Copy this shape:
 
 ### Close Issue

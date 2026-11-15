@@ -9,6 +9,7 @@ A worked example of `MEMORY.md` for the issue-tracker ontology next to it. Run `
 
 ## Preferences
 
+<!-- REVIEW R32 [clarify]: This is a rule about when Close Issue may run, which makes it a submission criterion. It's pinned, and score.py returns 'keep' for pinned entries before it checks for crystallize, so it can never be proposed for the ontology, which is where it belongs. Decide whether pinned entries can crystallize. -->
 - [first: 2026-10-05 | last: 2026-10-05 | uses: 1 | pinned] Never Close Issue on an Issue assigned-to a maintainer without asking first. (source: maintainer)
 - [first: 2026-11-10 | last: 2026-11-13 | uses: 2] Comments on closed Issues are one sentence and link the Pull Request that fixed it. (source: chat)
 

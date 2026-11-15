@@ -1,6 +1,7 @@
 name: test
 
 on:
+  # REVIEW R57 [nit]: push plus pull_request runs every PR branch twice. Limit push to main.
   push:
   pull_request:
 
@@ -11,12 +12,19 @@ jobs:
   scripts:
     runs-on: ubuntu-latest
     steps:
+      # REVIEW R58 [should-fix]: Pin actions to full commit SHAs. vet-skill makes users pin outside
+      # skills to a commit, so the plugin's own CI should be held to the same standard.
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
+          # REVIEW R59 [should-fix]: The README promises 'Python 3'. Test a matrix from the oldest
+          # version you support (3.8 or 3.9) up to 3.13.
           python-version: "3.12"
       - name: Check plugin manifest
         run: python3 -m json.tool .github/plugin/plugin.json > /dev/null
+      # REVIEW R60 [should-fix]: This grep matches name: anywhere in the file, not just the front
+      # matter. Also add checks that: every skill folder has a README row; plugin.json version equals
+      # the newest CHANGELOG heading; scan.py on skills/ passes against an allowlist (R50).
       - name: Check every skill has name and description
         run: |
           for f in skills/*/SKILL.md; do

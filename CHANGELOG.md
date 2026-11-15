@@ -1,5 +1,6 @@
 # Changelog
 
+<!-- REVIEW R63 [nit]: Three releases dated the same day with no git tags (R6). Tag v0.3.0 at the current release commit before announcing. -->
 ## Unreleased
 
 ## 0.3.0 (2026-11-15)
