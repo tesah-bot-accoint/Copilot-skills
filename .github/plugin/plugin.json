@@ -1,0 +1,9 @@
+{
+  "name": "ontology",
+  "version": "0.1.0",
+  "description": "Palantir-style ontology skills for Copilot: resolve ambiguous terms against ONTOLOGY.md, change things only through declared Action Types, and grow the ontology as questions get answered.",
+  "author": { "name": "tesah-bot-accoint" },
+  "repository": "https://github.com/tesah-bot-accoint/Copilot-skills",
+  "keywords": ["ontology", "glossary", "ambiguity", "palantir"],
+  "skills": "skills/"
+}
